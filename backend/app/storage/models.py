@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, Integer, Text, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, String, Integer, Float, Text, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 
 from app.storage.database import Base
@@ -87,7 +87,10 @@ class Product(Base):
     description = Column(Text, default="")
     detail_content = Column(Text, default="")  # 详细功能介绍与使用说明,构成知识库检索内容
     price = Column(String(64), default="")  # keep as string to support "99.00元"/"面议" etc.
+    price_value = Column(Float, default=0.0)  # 从 price 解析出的数值,用于价格区间过滤与排序
     specs = Column(Text, default="")  # free-form text or JSON string
+    brand = Column(String(128), default="", index=True)  # 品牌,用于结构化过滤
+    category = Column(String(64), default="", index=True)  # 品类,用于结构化过滤
     stock = Column(Integer, default=0)
     image_url = Column(String(512), default="")
     status = Column(String(16), default="indexed")  # indexed | failed

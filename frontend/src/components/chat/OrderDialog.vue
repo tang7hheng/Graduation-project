@@ -7,6 +7,7 @@ import {
 import type { ProductCard } from '@/api/client'
 import { useOrdersStore } from '@/stores/orders'
 import { useChatStore } from '@/stores/chat'
+import { parsePrice } from '@/utils/price'
 
 const props = defineProps<{ modelValue: boolean; product: ProductCard | null }>()
 const emit = defineEmits<{
@@ -25,12 +26,6 @@ const dialogVisible = computed({
 })
 
 watch(() => props.product?.id, () => { quantity.value = 1; remark.value = '' })
-
-function parsePrice(p: string): number {
-  // 取第一个数字,避免 "199-299" 被解析成 199299
-  const m = (p || '').match(/\d+(?:\.\d+)?/)
-  return m ? parseFloat(m[0]) : 0
-}
 
 const total = computed(() => {
   if (!props.product) return '0.00'

@@ -4,32 +4,18 @@ A consumer places an order by clicking a product card in the chat. The order
 is bound to the chat session (if any) and snapshots product info at order time.
 """
 import logging
-import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session as DBSession
 
 from app.api.deps import get_db
-from app.schemas.order import OrderCreate, OrderOut, OrderListOut, OrderItemOut, CartCheckout
-from app.storage.models import Order, OrderItem, Product, Session as SessionModel
+from app.rag.product_indexer import parse_price_value
+from app.schemas.order import OrderCreate, OrderOut, OrderListOut, CartCheckout
+from app.storage.models import Order, OrderItem, Product
 
 log = logging.getLogger(__name__)
 router = APIRouter()
-
-
-def _parse_price(p: Product) -> float:
-    """Best-effort parse product.price (string like "499.00 元" or "499") to float.
-
-    Extracts the first numeric value so range prices like "199-299" or
-    "199.00-299.00" don't get mangled into a single wrong number (e.g. 199299.0)
-    or raise ValueError on multiple dots.
-    """
-    raw = (p.price or "").strip()
-    if not raw:
-        return 0.0
-    m = re.search(r"\d+(?:\.\d+)?", raw)
-    return float(m.group()) if m else 0.0
 
 
 @router.post("/orders", response_model=OrderOut)
@@ -39,7 +25,7 @@ def create_order(payload: OrderCreate, db: DBSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="商品不存在")
 
     qty = max(1, int(payload.quantity or 1))
-    unit_price = _parse_price(p)
+    unit_price = parse_price_value(p.price or "")
     total = unit_price * qty
 
     order = Order(
@@ -87,7 +73,7 @@ def checkout_cart(payload: CartCheckout, db: DBSession = Depends(get_db)):
 
     created_orders: list[Order] = []
     for merchant_id, items in by_merchant.items():
-        total = sum(_parse_price(p) * qty for p, qty in items)
+        total = sum(parse_price_value(p.price or "") * qty for p, qty in items)
         order = Order(
             session_id=payload.session_id or None,
             merchant_id=merchant_id,

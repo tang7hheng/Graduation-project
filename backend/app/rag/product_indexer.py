@@ -1,13 +1,16 @@
 """Index a Product as a retrieval unit in the vector store.
 
 Each product becomes one Document whose page_content is a structured text block
-combining name / description / specs / price, and whose metadata carries
-product_id / merchant_id / name / type:"product" so the chat chain can:
+combining name / brand / category / description / detail_content / specs / price,
+and whose metadata carries product_id / merchant_id / name / price / price_value /
+brand / category / in_stock / type:"product" so the chat chain can:
   - aggregate sources by product
   - render product info (name, price) in citations
+  - structurally filter by category / brand / price range / stock
   - delete/update a single product's vector without touching others
 """
 import logging
+import re
 
 from langchain_core.documents import Document
 from sqlalchemy import select
@@ -18,10 +21,30 @@ from app.storage.models import Merchant, Product
 
 log = logging.getLogger(__name__)
 
+_PRICE_NUM_RE = re.compile(r"\d+(?:\.\d+)?")
+
+
+def parse_price_value(price_str: str) -> float:
+    """Extract the first numeric value from a price string.
+
+    '¥88.33' -> 88.33; '199-299' -> 199.0; '面议' -> 0.0 (no number found).
+    Used for price-range filtering and sorting.
+    """
+    if not price_str:
+        return 0.0
+    m = _PRICE_NUM_RE.search(price_str)
+    return float(m.group()) if m else 0.0
+
 
 def product_to_document(p: Product, merchant_name: str = "") -> Document:
     """Build the retrievable text for a product."""
+    brand = getattr(p, "brand", "") or ""
+    category = getattr(p, "category", "") or ""
     parts = [f"商品名称:{p.name}"]
+    if brand:
+        parts.append(f"品牌:{brand}")
+    if category:
+        parts.append(f"品类:{category}")
     if p.description:
         parts.append(f"商品描述:{p.description}")
     if p.detail_content:
@@ -36,13 +59,21 @@ def product_to_document(p: Product, merchant_name: str = "") -> Document:
         parts.append(f"商家:{merchant_name}")
     content = "\n".join(parts)
 
+    price_value = float(getattr(p, "price_value", 0.0) or 0.0)
+    if price_value <= 0.0:
+        price_value = parse_price_value(p.price or "")
+
     return Document(
         page_content=content,
         metadata={
             "product_id": p.id,
-            "merchant_id": p.merchant_id,
+            "merchant_id": p.merchant_id or "",
             "name": p.name,
             "price": p.price or "",
+            "price_value": price_value,
+            "brand": brand,
+            "category": category,
+            "in_stock": bool((p.stock or 0) > 0),
             "type": "product",
             "source": f"商品:{p.name}",
         },

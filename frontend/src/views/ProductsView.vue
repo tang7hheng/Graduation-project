@@ -7,6 +7,7 @@ import type { ProductOut } from '@/api/client'
 import { listAllProducts } from '@/api/products'
 import { useCartStore } from '@/stores/cart'
 import { useChatStore } from '@/stores/chat'
+import { parsePrice } from '@/utils/price'
 import OrderDialog from '@/components/chat/OrderDialog.vue'
 import ProductDetailDialog from '@/components/shop/ProductDetailDialog.vue'
 
@@ -27,12 +28,6 @@ onMounted(async () => {
   try { products.value = await listAllProducts() }
   finally { loading.value = false }
 })
-
-function parsePrice(p: string): number {
-  // 取第一个数字,避免 "199-299" 被解析成 199299
-  const m = (p || '').match(/\d+(?:\.\d+)?/)
-  return m ? parseFloat(m[0]) : 0
-}
 
 const filtered = computed(() => {
   let list = products.value

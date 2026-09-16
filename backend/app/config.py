@@ -33,10 +33,16 @@ class Settings(BaseSettings):
     chroma_collection: str = "kb_default"
 
     # === Retrieval ===
-    retrieval_top_k: int = 4
     # Cosine-similarity threshold used by the retrieval tools (products + knowledge base).
     # 0.40 keeps product recall broad enough to return multiple comparable items.
     retrieval_similarity_threshold: float = 0.40
+    # 向量召回后送入后续精排/过滤的候选池上限(越大召回越全但越慢)
+    retrieval_candidate_k: int = 40
+
+    # === Reranker (cross-encoder 精排,显著提升商品推荐准确率) ===
+    # 加载失败会自动降级为纯向量排序,不影响可用性
+    enable_reranker: bool = True
+    reranker_model: str = "BAAI/bge-reranker-base"
 
     # === Memory ===
     memory_buffer_size: int = 10

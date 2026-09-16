@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { checkoutCart } from '@/api/orders'
 import { useChatStore } from '@/stores/chat'
+import { parsePrice } from '@/utils/price'
 
 export interface CartLine {
   product_id: string
@@ -25,12 +26,6 @@ export interface CartProductInput {
 }
 
 const STORAGE_KEY = 'rag-cs-cart'
-
-function parsePrice(p: string): number {
-  // 取第一个数字,避免 "199-299" 被解析成 199299
-  const m = (p || '').match(/\d+(?:\.\d+)?/)
-  return m ? parseFloat(m[0]) : 0
-}
 
 function load(): CartLine[] {
   try {

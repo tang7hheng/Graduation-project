@@ -1,4 +1,6 @@
 """FastAPI application entry point."""
+import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -10,6 +12,33 @@ from app.config import settings, DATA_DIR
 from app.api.v1 import health, chat, sessions, knowledge, merchants, products, orders
 from app.storage.database import init_db
 
+log = logging.getLogger(__name__)
+
+
+def _warmup_models_async() -> None:
+    """Preload embedding + reranker in a background thread at startup.
+
+    Rationale: the first product search otherwise triggers a synchronous model
+    load/download (the reranker is ~1.1GB on first use) INSIDE the tool call,
+    which blocks the SSE stream with no keep-alive and can make the first chat
+    reply come back empty. Warming up here moves that cost off the first user
+    request. Best-effort: any failure is non-fatal.
+    """
+    def _warm():
+        try:
+            from app.core.embedding import get_embedding
+            from app.core.reranker import preload
+
+            get_embedding()
+            log.info("Warmup: embedding loaded")
+            if settings.enable_reranker:
+                preload()
+                log.info("Warmup: reranker loaded")
+        except Exception as e:  # noqa: BLE001 - warmup must never break startup
+            log.warning("Model warmup failed (non-fatal): %s", e)
+
+    threading.Thread(target=_warm, daemon=True).start()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +48,8 @@ async def lifespan(app: FastAPI):
     (settings.chroma_dir_abs).mkdir(parents=True, exist_ok=True)
     # Create database tables
     init_db()
+    # Preload models in background so the first chat request isn't blocked by cold-start download
+    _warmup_models_async()
     yield
 
 

@@ -4,16 +4,12 @@ import { ElDrawer, ElEmpty, ElImage, ElInputNumber, ElButton, ElInput } from 'el
 import { Delete } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
 import { useRouter } from 'vue-router'
+import { parsePrice } from '@/utils/price'
 
 const cart = useCartStore()
 const router = useRouter()
 const remark = ref('')
 
-function parsePrice(p: string): number {
-  // 取第一个数字,避免 "199-299" 被解析成 199299
-  const m = (p || '').match(/\d+(?:\.\d+)?/)
-  return m ? parseFloat(m[0]) : 0
-}
 function lineTotal(price: string, qty: number): string {
   return (parsePrice(price) * qty).toFixed(2)
 }

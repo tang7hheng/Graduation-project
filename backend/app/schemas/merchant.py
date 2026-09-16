@@ -29,6 +29,8 @@ class ProductCreate(BaseModel):
     specs: Optional[str] = ""
     stock: Optional[int] = 0
     image_url: Optional[str] = ""
+    brand: Optional[str] = ""
+    category: Optional[str] = ""
 
 
 class ProductUpdate(BaseModel):
@@ -39,6 +41,8 @@ class ProductUpdate(BaseModel):
     specs: Optional[str] = None
     stock: Optional[int] = None
     image_url: Optional[str] = None
+    brand: Optional[str] = None
+    category: Optional[str] = None
 
 
 class ProductOut(BaseModel):
@@ -48,7 +52,10 @@ class ProductOut(BaseModel):
     description: str
     detail_content: str = ""
     price: str
+    price_value: float = 0.0
     specs: str
+    brand: str = ""
+    category: str = ""
     stock: int
     image_url: str
     status: str

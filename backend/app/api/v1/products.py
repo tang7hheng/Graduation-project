@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSession
 
 from app.api.deps import get_db
-from app.rag.product_indexer import index_product, remove_product
+from app.rag.product_indexer import index_product, remove_product, parse_price_value
 from app.schemas.merchant import ProductCreate, ProductOut, ProductUpdate
 from app.storage.models import Merchant, Product
 
@@ -29,13 +29,17 @@ def create_product(
     if not m:
         raise HTTPException(status_code=404, detail="商户不存在")
 
+    price_str = payload.price or ""
     p = Product(
         merchant_id=merchant_id,
         name=payload.name,
         description=payload.description or "",
         detail_content=payload.detail_content or "",
-        price=payload.price or "",
+        price=price_str,
+        price_value=parse_price_value(price_str),
         specs=payload.specs or "",
+        brand=payload.brand or "",
+        category=payload.category or "",
         stock=payload.stock or 0,
         image_url=payload.image_url or "",
         status="indexed",
@@ -81,11 +85,17 @@ def update_product(
         raise HTTPException(status_code=404, detail="商品不存在")
 
     changed = False
-    for field in ("name", "description", "detail_content", "price", "specs", "stock", "image_url"):
+    for field in ("name", "description", "detail_content", "price", "specs", "stock", "image_url", "brand", "category"):
         val = getattr(payload, field, None)
         if val is not None and val != getattr(p, field):
             setattr(p, field, val)
             changed = True
+
+    # Keep price_value in sync with the (possibly updated) price string
+    new_pv = parse_price_value(p.price or "")
+    if abs(new_pv - (p.price_value or 0.0)) > 1e-9:
+        p.price_value = new_pv
+        changed = True
 
     if changed:
         db.commit()
