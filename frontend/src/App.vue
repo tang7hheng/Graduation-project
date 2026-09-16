@@ -7,13 +7,10 @@ import {
   ElMain,
   ElMenu,
   ElMenuItem,
-  ElRadioGroup,
-  ElRadioButton,
   ElBadge,
-  ElIcon,
   ElButton,
 } from 'element-plus'
-import { ShoppingCart } from '@element-plus/icons-vue'
+import { ShoppingCart, SwitchButton } from '@element-plus/icons-vue'
 import { useRoleStore } from '@/stores/role'
 import { useCartStore } from '@/stores/cart'
 import CartDrawer from '@/components/shop/CartDrawer.vue'
@@ -27,28 +24,20 @@ onMounted(() => {
   if (role.isMerchant) void role.ensureMerchant()
 })
 
-function onRoleChange(val: string) {
-  if (val === 'merchant') {
-    role.switchToMerchant()
-  } else {
-    role.switchToConsumer()
-  }
-  // Route guard in router/index.ts will redirect if the current page is not allowed.
-  // Force navigation so the guard runs even if already on a valid path.
-  router.replace(route.path)
+function logout() {
+  role.switchToConsumer()
+  router.replace('/login')
 }
 
-// Navigation menu items depend on role
 function navItems() {
   if (role.isMerchant) {
     return [
       { index: '/merchant', label: '商品管理' },
-      { index: '/knowledge', label: '知识库管理' },
     ]
   }
   return [
     { index: '/products', label: '商城' },
-    { index: '/chat', label: '智能问答' },
+    { index: '/chat', label: '智能导购' },
     { index: '/orders', label: '我的订单' },
   ]
 }
@@ -57,7 +46,10 @@ function navItems() {
 <template>
   <el-container class="app-layout">
     <el-header class="app-header">
-      <div class="logo">智能客服 RAG</div>
+      <div class="logo" @click="router.push(role.isMerchant ? '/merchant' : '/products')">
+        <div class="logo-mark">购</div>
+        <span class="logo-text">智选商城</span>
+      </div>
       <el-menu
         mode="horizontal"
         router
@@ -83,28 +75,26 @@ function navItems() {
               :icon="ShoppingCart"
               circle
               size="small"
+              class="cart-btn"
               @click="cart.openDrawer()"
             />
           </el-badge>
         </template>
-        <div class="role-switch">
-          <span class="label">身份:</span>
-          <el-radio-group
-            :model-value="role.role"
-            size="small"
-            @change="onRoleChange"
-          >
-            <el-radio-button label="consumer">消费者</el-radio-button>
-            <el-radio-button label="merchant">商户</el-radio-button>
-          </el-radio-group>
-        </div>
+        <el-button
+          :icon="SwitchButton"
+          size="small"
+          text
+          class="logout-btn"
+          @click="logout"
+        >
+          退出
+        </el-button>
       </div>
     </el-header>
     <el-main class="app-main">
       <RouterView />
     </el-main>
 
-    <!-- Global shopping cart drawer (so it works on any page, not just shop) -->
     <CartDrawer />
   </el-container>
 </template>
@@ -118,16 +108,40 @@ function navItems() {
 .app-header {
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  background: #1f2937;
-  color: #fff;
-  height: 56px;
+  padding: 0 32px;
+  background: var(--bg-surface);
+  height: 60px;
+  border-bottom: 1px solid var(--border-base);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 10;
 }
 .logo {
-  font-weight: 600;
-  font-size: 18px;
-  margin-right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 32px;
   flex-shrink: 0;
+  cursor: pointer;
+}
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent-primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+}
+.logo-text {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 .nav-menu {
   background: transparent;
@@ -135,13 +149,20 @@ function navItems() {
   flex: 1;
 }
 :deep(.nav-menu .el-menu-item) {
-  color: #d1d5db;
+  color: var(--text-secondary);
   border-bottom: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+:deep(.nav-menu .el-menu-item:hover) {
+  color: var(--accent-primary);
+  background: transparent;
 }
 :deep(.nav-menu .el-menu-item.is-active) {
-  color: #fff;
-  background: #374151;
-  border-bottom: 2px solid #60a5fa;
+  color: var(--accent-primary);
+  background: transparent;
+  border-bottom: 2px solid var(--accent-primary);
 }
 .right-area {
   display: flex;
@@ -149,22 +170,26 @@ function navItems() {
   gap: 16px;
   flex-shrink: 0;
 }
-.cart-badge {
-  margin-right: 4px;
+.cart-badge { margin-right: 4px; }
+.cart-btn {
+  border-color: var(--border-base) !important;
+  color: var(--text-secondary) !important;
+  background: var(--bg-surface) !important;
 }
-.role-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.cart-btn:hover {
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
 }
-.role-switch .label {
-  font-size: 12px;
-  color: #9ca3af;
+.logout-btn {
+  color: var(--text-tertiary) !important;
+}
+.logout-btn:hover {
+  color: var(--accent-primary) !important;
 }
 .app-main {
   flex: 1;
   padding: 0;
   overflow: hidden;
-  background: #f3f4f6;
+  background: var(--bg-base);
 }
 </style>

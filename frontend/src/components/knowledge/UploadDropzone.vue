@@ -70,35 +70,12 @@ function onDragLeave() {
 
 <style scoped>
 .dropzone {
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  padding: 24px;
-  background: #fff;
-  margin-bottom: 16px;
-  transition: all 0.2s;
+  border: 2px dashed var(--border-strong); border-radius: var(--radius-md);
+  padding: 24px; background: var(--bg-surface); margin-bottom: 16px; transition: all 0.2s;
 }
-.dropzone.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-.dropzone :deep(.el-upload-dragger) {
-  width: 100%;
-  padding: 20px;
-  border: none;
-  background: transparent;
-}
-.icon {
-  font-size: 40px;
-  color: #60a5fa;
-  margin-bottom: 8px;
-}
-.title {
-  color: #374151;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-.sub {
-  color: #9ca3af;
-  font-size: 12px;
-}
+.dropzone.active { border-color: var(--accent-primary); background: var(--accent-primary-light); }
+.dropzone :deep(.el-upload-dragger) { width: 100%; padding: 20px; border: none; background: transparent; }
+.icon { font-size: 40px; color: var(--accent-primary); margin-bottom: 8px; }
+.title { color: var(--text-primary); font-size: 14px; margin-bottom: 4px; font-weight: 600; }
+.sub { color: var(--text-tertiary); font-size: 12px; }
 </style>

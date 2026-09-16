@@ -11,6 +11,8 @@ export interface SSEHandlers {
   onProductCards?: (cards: any[]) => void
   onDone?: (messageId?: number) => void
   onError?: (msg: string) => void
+  onThinking?: (message: string) => void
+  onToolCall?: (name: string, args: any) => void
 }
 
 export interface SSEAbortController {
@@ -108,6 +110,12 @@ function dispatchEvent(evt: any, h: SSEHandlers) {
   switch (evt?.type) {
     case 'token':
       h.onToken(evt.content || '')
+      break
+    case 'thinking':
+      h.onThinking?.(evt.message || '正在思考...')
+      break
+    case 'tool_call':
+      h.onToolCall?.(evt.name || '', evt.args || {})
       break
     case 'sources':
       h.onSources?.(evt.sources || [])

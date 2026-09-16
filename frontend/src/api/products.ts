@@ -32,3 +32,11 @@ export async function listAllProducts(): Promise<ProductOut[]> {
 export async function deleteProduct(productId: string): Promise<void> {
   await http.delete(`/products/${productId}`)
 }
+
+export async function updateProduct(
+  productId: string,
+  payload: Partial<ProductCreate>,
+): Promise<ProductOut> {
+  const { data } = await http.put(`/products/${productId}`, payload)
+  return data as ProductOut
+}

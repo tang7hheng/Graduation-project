@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, computed } from 'vue'
+import { onMounted, watch, computed, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElAlert } from 'element-plus'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -17,6 +17,13 @@ const { isStreaming, currentSources } = storeToRefs(chat)
 watch(currentId, async (id) => {
   if (id) {
     await chat.loadSession(id)
+    // If there's a pending query from another page, auto-send it
+    if (chat.pendingQuery) {
+      const q = chat.pendingQuery
+      chat.pendingQuery = ''
+      await nextTick()
+      await chat.sendMessage(q)
+    }
   } else {
     chat.reset()
   }
@@ -26,6 +33,16 @@ onMounted(async () => {
   await sessions.fetchList()
   if (sessions.list.length > 0 && !currentId.value) {
     await sessions.select(sessions.list[0].id)
+  } else if (sessions.list.length === 0) {
+    // No sessions — create one so pending query can be sent
+    await sessions.create()
+  }
+  // If there's a pending query, auto-send it
+  if (chat.pendingQuery && currentId.value && !isStreaming.value) {
+    const q = chat.pendingQuery
+    chat.pendingQuery = ''
+    await nextTick()
+    await chat.sendMessage(q)
   }
 })
 
@@ -40,6 +57,7 @@ const hasSession = computed(() => !!currentId.value)
         :messages="chat.messages"
         :streaming-text="chat.streamingText"
         :is-streaming="isStreaming"
+        :thinking-message="chat.thinkingMessage"
         :streaming-product-cards="chat.currentProductCards"
         :streaming-sources="chat.currentSources"
       />

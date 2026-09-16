@@ -28,16 +28,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.knowledge-layout {
-  padding: 24px;
-  height: 100%;
-  overflow: auto;
-}
-.content {
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.knowledge-layout { padding: 24px; height: 100%; overflow: auto; background: var(--bg-base); }
+.content { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 </style>

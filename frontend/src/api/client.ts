@@ -65,6 +65,7 @@ export interface ProductOut {
   merchant_id: string
   name: string
   description: string
+  detail_content?: string
   price: string
   specs: string
   stock: number
@@ -76,6 +77,7 @@ export interface ProductOut {
 export interface ProductCreate {
   name: string
   description?: string
+  detail_content?: string
   price?: string
   specs?: string
   stock?: number
@@ -86,11 +88,13 @@ export interface ProductCreate {
 export interface ProductCard {
   id: string
   merchant_id: string
+  merchant_name?: string
   name: string
   description: string
   price: string
   specs: string
   image_url: string
+  stock_status?: string
 }
 
 // === Order ===

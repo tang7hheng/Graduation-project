@@ -67,5 +67,7 @@ def reset_collection():
         client.delete_collection(name=settings.chroma_collection)
     except Exception:
         pass
-    # Recreate by accessing _collection property
-    _ = vs._collection
+    # Drop the cached Chroma instance so a fresh one (with a new collection) is built
+    get_vector_store.cache_clear()
+    # Force creation of the new collection
+    _ = get_vector_store()._collection

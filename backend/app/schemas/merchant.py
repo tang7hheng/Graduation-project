@@ -24,6 +24,7 @@ class MerchantOut(BaseModel):
 class ProductCreate(BaseModel):
     name: str
     description: Optional[str] = ""
+    detail_content: Optional[str] = ""
     price: Optional[str] = ""
     specs: Optional[str] = ""
     stock: Optional[int] = 0
@@ -33,6 +34,7 @@ class ProductCreate(BaseModel):
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    detail_content: Optional[str] = None
     price: Optional[str] = None
     specs: Optional[str] = None
     stock: Optional[int] = None
@@ -44,6 +46,7 @@ class ProductOut(BaseModel):
     merchant_id: str
     name: str
     description: str
+    detail_content: str = ""
     price: str
     specs: str
     stock: int

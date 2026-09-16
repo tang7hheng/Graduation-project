@@ -33,6 +33,7 @@ def create_product(
         merchant_id=merchant_id,
         name=payload.name,
         description=payload.description or "",
+        detail_content=payload.detail_content or "",
         price=payload.price or "",
         specs=payload.specs or "",
         stock=payload.stock or 0,
@@ -80,7 +81,7 @@ def update_product(
         raise HTTPException(status_code=404, detail="商品不存在")
 
     changed = False
-    for field in ("name", "description", "price", "specs", "stock", "image_url"):
+    for field in ("name", "description", "detail_content", "price", "specs", "stock", "image_url"):
         val = getattr(payload, field, None)
         if val is not None and val != getattr(p, field):
             setattr(p, field, val)

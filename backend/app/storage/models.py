@@ -85,6 +85,7 @@ class Product(Base):
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="SET NULL"), nullable=True, index=True)
     name = Column(String(256), nullable=False)
     description = Column(Text, default="")
+    detail_content = Column(Text, default="")  # 详细功能介绍与使用说明,构成知识库检索内容
     price = Column(String(64), default="")  # keep as string to support "99.00元"/"面议" etc.
     specs = Column(Text, default="")  # free-form text or JSON string
     stock = Column(Integer, default=0)

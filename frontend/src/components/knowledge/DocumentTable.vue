@@ -71,21 +71,7 @@ async function rebuild() {
 </template>
 
 <style scoped>
-.table-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.header .title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #1f2937;
-}
+.table-card { background: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-base); }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.header .title { font-weight: 700; font-size: 15px; color: var(--text-primary); }
 </style>

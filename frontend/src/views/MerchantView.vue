@@ -30,7 +30,7 @@ onMounted(async () => {
         type="info"
         :closable="false"
         show-icon
-        title="上架的商品会自动入索引,消费者提问时客服会基于这些商品信息回答。"
+        title='上架商品时请填写「功能介绍与使用说明」,包含功能、用法、售后政策等。这些内容构成商品知识库,AI客服据此为用户介绍和推荐。'
       />
       <ProductForm />
       <ProductTable />
@@ -39,16 +39,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.merchant-layout {
-  padding: 24px;
-  height: 100%;
-  overflow: auto;
-}
-.content {
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.merchant-layout { padding: 24px; height: 100%; overflow: auto; background: var(--bg-base); }
+.content { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 </style>

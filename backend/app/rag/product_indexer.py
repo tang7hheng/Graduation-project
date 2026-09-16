@@ -18,6 +18,8 @@ def product_to_document(p: Product, merchant_name: str = "") -> Document:
     parts = [f"商品名称:{p.name}"]
     if p.description:
         parts.append(f"商品描述:{p.description}")
+    if p.detail_content:
+        parts.append(f"功能介绍与使用说明:{p.detail_content}")
     if p.specs:
         parts.append(f"规格参数:{p.specs}")
     if p.price:

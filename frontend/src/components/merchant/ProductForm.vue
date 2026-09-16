@@ -20,6 +20,7 @@ const formRef = ref<FormInstance>()
 const form = reactive<ProductCreate>({
   name: '',
   description: '',
+  detail_content: '',
   price: '',
   specs: '',
   stock: 0,
@@ -33,6 +34,7 @@ const rules: FormRules = {
 function reset() {
   form.name = ''
   form.description = ''
+  form.detail_content = ''
   form.price = ''
   form.specs = ''
   form.stock = 0
@@ -72,8 +74,16 @@ async function submit() {
         <el-input
           v-model="form.description"
           type="textarea"
-          :rows="3"
-          placeholder="商品的主要功能、特点、适用场景等(将作为客服检索依据)"
+          :rows="2"
+          placeholder="简短描述商品的主要特点和适用场景"
+        />
+      </el-form-item>
+      <el-form-item label="功能介绍与使用说明">
+        <el-input
+          v-model="form.detail_content"
+          type="textarea"
+          :rows="8"
+          placeholder="详细的功能介绍、使用方法、售后政策等。这些内容将作为AI客服的知识库依据,用户提问时AI会基于此内容进行介绍和推荐。&#10;&#10;建议包含:&#10;1. 核心功能介绍(各功能详细说明)&#10;2. 使用方法与注意事项&#10;3. 售后政策(退换货规则、保修期限等)&#10;4. 常见问题解答&#10;&#10;示例:&#10;【功能】支持NFC公交/门禁模拟,可绑定多张卡&#10;【使用】长按侧键3秒开机,下载APP绑定设备&#10;【售后】7天无理由退换,1年质保&#10;【注意】游泳时可佩戴,但不要热水浴"
         />
       </el-form-item>
       <el-form-item label="规格参数">
@@ -110,12 +120,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.form-card {
-  background: #fff;
-}
-.header-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #1f2937;
-}
+.form-card { background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-base); }
+.header-title { font-weight: 700; font-size: 15px; color: var(--text-primary); }
 </style>

@@ -31,6 +31,20 @@ def init_db():
     from app.storage import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _migrate_add_detail_content()
+
+
+def _migrate_add_detail_content():
+    """Add detail_content column to products table if it doesn't exist."""
+    from sqlalchemy import text, inspect
+    insp = inspect(engine)
+    if "products" not in insp.get_table_names():
+        return
+    columns = [c["name"] for c in insp.get_columns("products")]
+    if "detail_content" not in columns:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE products ADD COLUMN detail_content TEXT DEFAULT ''"))
+            conn.commit()
 
 
 def get_db():

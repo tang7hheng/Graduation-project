@@ -12,6 +12,7 @@ Architecture (per user requirements):
 """
 import json
 import logging
+import re
 import time
 from typing import Generator
 
@@ -33,6 +34,46 @@ from app.storage import session_store
 log = logging.getLogger(__name__)
 
 
+def _extract_exclusions(context_msgs: list[BaseMessage], current_msg: str) -> str:
+    """Scan conversation history for user exclusion patterns like '不要华为' and
+    inject them as an explicit system reminder so the LLM doesn't forget.
+
+    Only extracts from HumanMessage (user) content. Returns empty string if none found.
+    """
+    # Pattern: 不要/排除/不含 + brand/keyword
+    pattern = re.compile(r'(?:不要|不想|排除|不含|别给我|不喜欢|不要推荐)([a-zA-Z\u4e00-\u9fff]{1,8})')
+
+    exclusions: list[str] = []
+    for msg in context_msgs:
+        if not isinstance(msg, HumanMessage):
+            continue
+        matches = pattern.findall(msg.content or "")
+        for m in matches:
+            m = m.strip()
+            if m and m not in exclusions:
+                exclusions.append(m)
+
+    # Also check current message
+    matches = pattern.findall(current_msg or "")
+    for m in matches:
+        m = m.strip()
+        if m and m not in exclusions:
+            exclusions.append(m)
+
+    # Filter out generic words that aren't brand/category names
+    stop_words = {"的", "了", "太", "贵", "便宜", "其他", "这个", "那个", "这些", "那些"}
+    exclusions = [e for e in exclusions if e not in stop_words]
+
+    if not exclusions:
+        return ""
+
+    return (
+        f"【用户排除条件提醒】根据之前的对话,用户明确表示不要以下品牌/商品:"
+        f"{'、'.join(exclusions)}。"
+        f"在本次推荐中,必须排除包含以上关键词的商品,绝对不能推荐。"
+    )
+
+
 def _sse(event: dict) -> str:
     """Serialize a dict to an SSE `data:` frame (terminated by \\n\\n)."""
     return f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
@@ -47,15 +88,40 @@ def _execute_tool(tool_name: str, args: dict) -> str:
     return json.dumps({"error": f"未知工具: {tool_name}"}, ensure_ascii=False)
 
 
-def _extract_product_cards_from_tool_history(messages: list[BaseMessage]) -> list[dict]:
+def _name_in_answer(name: str, answer: str, window: int = 6) -> bool:
+    """Check if a product name is referenced in the LLM's answer text.
+
+    Uses a sliding window approach: if any `window`-char substring of the
+    product name appears in the answer, it's considered a match.
+    This handles cases where the DB name is very long but the LLM only
+    mentioned a short version (e.g., DB: "小米手环10 NFC陶瓷版血氧心率睡眠监测...",
+    answer: "小米手环10 NFC陶瓷版 — ¥309").
+    """
+    if not name or not answer:
+        return False
+    if len(name) <= window:
+        return name in answer
+    for i in range(len(name) - window + 1):
+        sub = name[i : i + window]
+        if sub in answer:
+            return True
+    return False
+
+
+def _extract_product_cards_from_tool_history(
+    db: DBSession, messages: list[BaseMessage], answer_text: str = ""
+) -> list[dict]:
     """Parse tool-call history to collect product cards to show in the UI.
 
-    Scans ToolMessages for search_products_by_keyword / get_product_detail results,
-    extracts product info, and de-dupes by product_id.
+    Only shows products that the LLM actually referenced in its answer text.
+    This prevents showing products that were in search results but filtered out
+    by the LLM (e.g., user said "不要华为" → LLM excludes Huawei in text,
+    but search results still contain Huawei products).
     """
-    cards: list[dict] = []
-    seen_pids: set[str] = set()
+    from app.storage.models import Product, Merchant
 
+    # Step 1: Collect all product IDs from tool messages
+    all_pids: set[str] = set()
     for msg in messages:
         if not isinstance(msg, ToolMessage):
             continue
@@ -63,49 +129,51 @@ def _extract_product_cards_from_tool_history(messages: list[BaseMessage]) -> lis
             payload = json.loads(msg.content) if isinstance(msg.content, str) else msg.content
         except Exception:
             continue
-
-        # search result: {"products": [{product_id, name, price, snippet, ...}]}
         if isinstance(payload, dict) and "products" in payload:
             for p in payload["products"]:
                 pid = p.get("product_id") or ""
-                if not pid or pid in seen_pids:
-                    continue
-                seen_pids.add(pid)
-                cards.append(
-                    {
-                        "id": pid,
-                        "name": p.get("name", "未知商品"),
-                        "price": p.get("price", ""),
-                        "description": "",
-                        "specs": "",
-                        "image_url": "",
-                        # enrich below if a get_product_detail call exists
-                    }
-                )
-
-        # detail result: {product_id, name, description, price, specs, ...}
-        if isinstance(payload, dict) and "product_id" in payload and "products" not in payload:
+                if pid:
+                    all_pids.add(pid)
+        if isinstance(payload, dict) and "product_id" in payload:
             pid = payload.get("product_id") or ""
-            # Enrich existing card if present, else add
-            for c in cards:
-                if c["id"] == pid:
-                    c["description"] = payload.get("description", c["description"])
-                    c["specs"] = payload.get("specs", c["specs"])
-                    c["price"] = payload.get("price", c["price"]) or c["price"]
-                    break
-            else:
-                if pid and pid not in seen_pids:
-                    seen_pids.add(pid)
-                    cards.append(
-                        {
-                            "id": pid,
-                            "name": payload.get("name", "未知商品"),
-                            "price": payload.get("price", ""),
-                            "description": payload.get("description", ""),
-                            "specs": payload.get("specs", ""),
-                            "image_url": "",
-                        }
-                    )
+            if pid:
+                all_pids.add(pid)
+
+    if not all_pids:
+        return []
+
+    # Step 2: If we have answer text, only include products mentioned in it
+    answer_lower = (answer_text or "").lower()
+    cards: list[dict] = []
+    for pid in all_pids:
+        p = db.get(Product, pid)
+        if not p:
+            continue
+
+        # Check if product name appears in the LLM's answer using sliding window
+        if answer_text:
+            name_lower = (p.name or "").lower()
+            if not _name_in_answer(name_lower, answer_lower):
+                continue
+
+        merchant_name = ""
+        if p.merchant_id:
+            m = db.get(Merchant, p.merchant_id)
+            if m:
+                merchant_name = m.name
+        cards.append(
+            {
+                "id": p.id,
+                "merchant_id": p.merchant_id or "",
+                "merchant_name": merchant_name,
+                "name": p.name,
+                "price": p.price or "",
+                "description": p.description or "",
+                "specs": p.specs or "",
+                "image_url": p.image_url or "",
+                "stock_status": "充足" if (p.stock or 0) > 0 else "缺货",
+            }
+        )
 
     return cards
 
@@ -119,12 +187,22 @@ def stream_chat(
     # 1. Persist user message
     session_store.add_message(db, session_id, role="user", content=user_message)
 
+    # 1b. Immediate feedback so the frontend can show a "thinking" indicator
+    yield _sse({"type": "thinking", "message": "正在思考..."})
+
     # 2. Build message sequence: system + memory + question
     #    No pre-retrieved context — LLM uses tools to query instead.
     messages: list[BaseMessage] = [
         SystemMessage(content=SYSTEM_PROMPT),
     ]
-    messages.extend(load_context_messages(db, session_id))
+    context_msgs = load_context_messages(db, session_id)
+    messages.extend(context_msgs)
+
+    # 2b. Extract user exclusion constraints from conversation history and inject as reminder
+    exclusion_reminder = _extract_exclusions(context_msgs, user_message)
+    if exclusion_reminder:
+        messages.append(SystemMessage(content=exclusion_reminder))
+
     messages.append(HumanMessage(content=user_message))
 
     # 3. Get LLM and bind tools
@@ -170,7 +248,7 @@ def stream_chat(
 
                 # Keep-alive ping
                 now = time.time()
-                if now - last_ping > 15:
+                if now - last_ping > 5:
                     yield _sse({"type": "ping"})
                     last_ping = now
 
@@ -208,6 +286,9 @@ def stream_chat(
             for i, tc in enumerate(parsed_tool_calls):
                 tool_name = tc["name"]
                 tool_args = tc["args"]
+                # Tell the frontend we're querying products (reduces perceived lag)
+                thinking_msg = "正在查询商品信息..." if tool_name == "search_products_by_keyword" else "正在查询商品详情..."
+                yield _sse({"type": "thinking", "message": thinking_msg})
                 yield _sse({"type": "tool_call", "name": tool_name, "args": tool_args})
                 try:
                     result = _execute_tool(tool_name, tool_args)
@@ -243,7 +324,7 @@ def stream_chat(
 
     # 5. Build product cards from tool-call history (LLM did NOT touch DB directly)
     sources_payload: list[dict] = []
-    product_cards_payload = _extract_product_cards_from_tool_history(messages)
+    product_cards_payload = _extract_product_cards_from_tool_history(db, messages, full_answer)
     if product_cards_payload:
         for c in product_cards_payload:
             sources_payload.append(

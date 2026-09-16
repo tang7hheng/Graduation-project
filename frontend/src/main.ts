@@ -9,6 +9,12 @@ import App from './App.vue'
 import router from './router'
 import './styles/main.css'
 
+// Crisp Commerce fonts: Plus Jakarta Sans for both display and body
+const fontLink = document.createElement('link')
+fontLink.rel = 'stylesheet'
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap'
+document.head.appendChild(fontLink)
+
 const app = createApp(App)
 
 // Register all Element Plus icons globally

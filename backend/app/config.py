@@ -17,9 +17,9 @@ class Settings(BaseSettings):
     )
 
     # === LLM ===
-    deepseek_api_key: str = ""
-    deepseek_base_url: str = "https://api.deepseek.com/v1"
-    deepseek_model: str = "deepseek-chat"
+    deepseek_api_key: str = "sk-ab9cf1558d7a4b20abafba93b4ca28c7"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-flash"
     llm_temperature: float = 0.3
     llm_max_tokens: int = 2048
 

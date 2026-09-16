@@ -6,6 +6,7 @@ import {
   listMerchantProducts,
   createProduct,
   deleteProduct,
+  updateProduct,
 } from '@/api/products'
 import { useRoleStore } from '@/stores/role'
 
@@ -58,6 +59,22 @@ export const useMerchantProductsStore = defineStore('merchantProducts', () => {
     }
   }
 
+  async function update(id: string, payload: Partial<ProductCreate>) {
+    submitting.value = true
+    try {
+      const p = await updateProduct(id, payload)
+      ElMessage.success('商品已更新')
+      const idx = products.value.findIndex((x) => x.id === id)
+      if (idx >= 0) products.value[idx] = p
+      return p
+    } catch (e: any) {
+      ElMessage.error(e.message || '更新失败')
+      throw e
+    } finally {
+      submitting.value = false
+    }
+  }
+
   return {
     products,
     loading,
@@ -65,5 +82,6 @@ export const useMerchantProductsStore = defineStore('merchantProducts', () => {
     fetchList,
     add,
     remove,
+    update,
   }
 })

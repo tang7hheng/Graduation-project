@@ -96,6 +96,7 @@ curl http://localhost:8000/api/v1/merchants/a1b2c3.../products
 {
   "name": "智能云音箱 Pro",
   "description": "4英寸全频单元,30W,支持语音助手,适合卧室听音乐",
+  "detail_content": "核心功能:语音助手控制、立体声播放。使用说明:长按顶部唤醒语音助手。售后政策:7天无理由退换,1年质保。",
   "price": "499.00",
   "specs": "尺寸:180x90x90mm;重量:1.2kg;蓝牙5.0;WiFi双频",
   "stock": 50,
@@ -110,6 +111,7 @@ curl http://localhost:8000/api/v1/merchants/a1b2c3.../products
   "merchant_id": "a1b2c3...",
   "name": "智能云音箱 Pro",
   "description": "4英寸全频单元...",
+  "detail_content": "核心功能:语音助手控制...",
   "price": "499.00",
   "specs": "尺寸:180x90x90mm;...",
   "stock": 50,
@@ -119,6 +121,8 @@ curl http://localhost:8000/api/v1/merchants/a1b2c3.../products
 }
 ```
 
+> `detail_content` 字段:商品的功能介绍、使用说明和售后政策,构成商品知识库,AI 客服据此回答用户问题。
+>
 > `status` 字段:`indexed`(已入向量库) / `failed`(索引失败但 DB 记录已保存)
 
 **curl**:
@@ -160,10 +164,14 @@ curl http://localhost:8000/api/v1/products/p1q2r3...
 ```json
 // Request Body(所有字段可选,只传需要改的)
 {
+  "name": "智能云音箱 Pro(2025升级版)",
   "price": "459.00",
-  "stock": 80
+  "stock": 80,
+  "detail_content": "新增功能:... 售后政策:..."
 }
 ```
+
+> 修改后自动重建向量索引,无需下架重建。
 
 **curl**:
 ```bash

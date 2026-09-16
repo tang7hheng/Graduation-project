@@ -2,7 +2,6 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { renderMarkdownTo } from '@/composables/useMarkdown'
 import type { MessageOut } from '@/api/client'
-import ProductCards from './ProductCards.vue'
 
 const props = defineProps<{
   message: MessageOut
@@ -23,17 +22,13 @@ watch(() => props.message.content, () => nextTick(update))
 
 <template>
   <div class="bubble-row" :class="message.role">
-    <div class="avatar">{{ message.role === 'user' ? '我' : '客服' }}</div>
+    <div class="avatar">{{ message.role === 'user' ? '我' : 'AI' }}</div>
     <div class="bubble-content">
       <div
         ref="contentEl"
         class="markdown-body"
         :class="{ 'streaming-caret': streaming }"
       ></div>
-      <ProductCards
-        v-if="message.product_cards_json && message.product_cards_json.length"
-        :cards="message.product_cards_json"
-      />
     </div>
   </div>
 </template>
@@ -44,35 +39,42 @@ watch(() => props.message.content, () => nextTick(update))
   gap: 12px;
   margin: 16px 0;
   align-items: flex-start;
+  animation: slide-in 0.3s ease-out;
 }
 .bubble-row.user {
   flex-direction: row-reverse;
 }
 .avatar {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  font-weight: 700;
   color: #fff;
-  background: #3b82f6;
+  background: var(--accent-primary);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
 }
 .bubble-row.user .avatar {
-  background: #10b981;
+  background: #64748b;
+  box-shadow: 0 2px 6px rgba(100, 116, 139, 0.15);
 }
 .bubble-content {
-  max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  max-width: 72%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-base);
+  border-top-left-radius: 4px;
 }
 .bubble-row.user .bubble-content {
-  background: #dbeafe;
-  border-color: #bfdbfe;
+  background: var(--accent-primary-light);
+  border-color: #c7d2fe;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: 4px;
 }
 </style>
