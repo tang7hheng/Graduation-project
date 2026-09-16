@@ -5,7 +5,6 @@ import { ShoppingCart, Goods } from '@element-plus/icons-vue'
 import type { ProductCard } from '@/api/client'
 import OrderDialog from './OrderDialog.vue'
 import { useCartStore } from '@/stores/cart'
-import { ElMessage } from 'element-plus'
 
 defineProps<{
   cards: ProductCard[]
@@ -22,8 +21,8 @@ function openOrder(p: ProductCard) {
 
 function addToCart(p: ProductCard) {
   if (p.stock_status === '缺货') return
-  cart.add(p as any, 1)
-  ElMessage.success(`已加入购物车：${p.name.slice(0, 20)}`)
+  // cart.add() 内部已提示成功,这里不再重复通知
+  cart.add(p, 1)
 }
 
 function parseSpecs(specs: string): { label: string; value: string }[] {

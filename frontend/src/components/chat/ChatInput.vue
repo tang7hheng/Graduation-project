@@ -29,8 +29,9 @@ function handleSend() {
   chatStore.draftText = ''
 }
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && !e.shiftKey) {
+function onKeydown(e: Event) {
+  const ke = e as KeyboardEvent
+  if (ke.key === 'Enter' && !ke.shiftKey) {
     e.preventDefault()
     handleSend()
   }

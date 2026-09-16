@@ -43,7 +43,7 @@ class ProductUpdate(BaseModel):
 
 class ProductOut(BaseModel):
     id: str
-    merchant_id: str
+    merchant_id: Optional[str] = None  # 商户被删除(SET NULL)后可能为 None
     name: str
     description: str
     detail_content: str = ""

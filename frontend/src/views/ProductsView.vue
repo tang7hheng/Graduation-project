@@ -29,8 +29,9 @@ onMounted(async () => {
 })
 
 function parsePrice(p: string): number {
-  const cleaned = (p || '').replace(/[^\d.]/g, '')
-  return cleaned ? parseFloat(cleaned) : 0
+  // 取第一个数字,避免 "199-299" 被解析成 199299
+  const m = (p || '').match(/\d+(?:\.\d+)?/)
+  return m ? parseFloat(m[0]) : 0
 }
 
 const filtered = computed(() => {
@@ -100,7 +101,9 @@ function askAIAbout(p: ProductOut) {
               <template #error><div class="img-fallback">购</div></template>
             </el-image>
             <div v-else class="img-fallback">购</div>
-            <el-tag class="tag" size="small" type="success" effect="light">库存充足</el-tag>
+            <el-tag class="tag" size="small" :type="p.stock > 0 ? 'success' : 'danger'" effect="light">
+              {{ p.stock > 0 ? '库存充足' : '缺货' }}
+            </el-tag>
           </div>
           <div class="info">
             <div class="name" :title="p.name" @click="openDetail(p)">{{ p.name }}</div>

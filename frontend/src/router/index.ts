@@ -11,6 +11,7 @@ const router = createRouter({
     { path: '/merchant', name: 'merchant', component: () => import('@/views/MerchantView.vue'), meta: { roles: ['merchant'] } },
     { path: '/products', name: 'products', component: () => import('@/views/ProductsView.vue'), meta: { roles: ['consumer'] } },
     { path: '/orders', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { roles: ['consumer'] } },
+    { path: '/knowledge', name: 'knowledge', component: () => import('@/views/KnowledgeView.vue'), meta: { roles: ['merchant'] } },
   ],
 })
 

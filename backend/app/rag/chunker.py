@@ -5,8 +5,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from app.config import settings
 
 
-# Chinese punctuation included for better boundary detection
-_SEPARATORS = ["\n\n", "\n", "。", "!", "?", "!", "?", " ", ""]
+# Chinese + ASCII punctuation included for better boundary detection
+# (original had "!"/"?" duplicated; use full-width ！？ alongside ASCII !?)
+_SEPARATORS = ["\n\n", "\n", "。", "！", "？", "!", "?", " ", ""]
 
 
 def get_splitter(chunk_size: int = 500, chunk_overlap: int = 50) -> RecursiveCharacterTextSplitter:

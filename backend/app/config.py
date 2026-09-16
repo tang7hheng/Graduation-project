@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     )
 
     # === LLM ===
-    deepseek_api_key: str = "sk-ab9cf1558d7a4b20abafba93b4ca28c7"
+    # 密钥必须通过 backend/.env 的 DEEPSEEK_API_KEY 配置,不要在源码中硬编码
+    deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-flash"
     llm_temperature: float = 0.3
@@ -33,7 +34,9 @@ class Settings(BaseSettings):
 
     # === Retrieval ===
     retrieval_top_k: int = 4
-    retrieval_similarity_threshold: float = 0.55
+    # Cosine-similarity threshold used by the retrieval tools (products + knowledge base).
+    # 0.40 keeps product recall broad enough to return multiple comparable items.
+    retrieval_similarity_threshold: float = 0.40
 
     # === Memory ===
     memory_buffer_size: int = 10

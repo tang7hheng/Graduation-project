@@ -23,3 +23,4 @@ class UploadResp(BaseModel):
 
 class RebuildResp(BaseModel):
     reindexed: int
+    products_reindexed: int = 0

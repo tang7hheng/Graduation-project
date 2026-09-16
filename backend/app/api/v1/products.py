@@ -102,7 +102,7 @@ def update_product(
             db.commit()
             db.refresh(p)
     else:
-        db.commit()
+        # 没有任何字段变更,无需 commit
         db.refresh(p)
     return p
 

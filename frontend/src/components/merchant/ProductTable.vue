@@ -113,7 +113,7 @@ async function saveEdit() {
             :icon="Edit"
             size="small"
             link
-            @click="openEdit(row)"
+            @click="openEdit(row as ProductOut)"
           >
             编辑
           </el-button>

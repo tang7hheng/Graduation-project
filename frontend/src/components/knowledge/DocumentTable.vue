@@ -22,7 +22,7 @@ async function remove(id: string) {
 }
 
 async function rebuild() {
-  if (!confirm('确认重建索引?会清空当前 collection 并重新索引所有已上传文档,可能耗时较长。')) return
+  if (!confirm('确认重建索引?会清空当前 collection 并重新索引所有已上传文档与全部商品,可能耗时较长。')) return
   await store.rebuild()
 }
 </script>

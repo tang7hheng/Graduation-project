@@ -34,6 +34,11 @@ class GetProductDetailInput(BaseModel):
     product_id: str = Field(..., description="商品 ID,必须是 search_products_by_keyword 返回结果中的 product_id 字段值(UUID 格式,如 '4dcc30c231ae4022b2df4ac37e78b9a5'),不能用序号'1''2'代替")
 
 
+class SearchKnowledgeInput(BaseModel):
+    query: str = Field(..., description="用户问题关键词,用于检索平台知识库文档(如售后政策、退换货规则、发票、物流、平台规则、常见FAQ等)")
+    top_k: int = Field(default=4, ge=1, le=8, description="返回的文档片段数量,默认4")
+
+
 # === Tool implementations ===
 @tool("search_products_by_keyword", args_schema=SearchProductsInput)
 def search_products_by_keyword(keyword: str, top_k: int = 8) -> str:
@@ -57,8 +62,8 @@ def search_products_by_keyword(keyword: str, top_k: int = 8) -> str:
         return json.dumps({"error": f"检索失败: {e}", "products": []}, ensure_ascii=False)
 
     # Chroma returns cosine distance in [0, 2]; convert to similarity = 1 - distance/2 (range [0, 1])
-    # Lowered threshold so that multiple similar products can be returned together
-    sim_threshold = 0.40
+    # Threshold is configurable via settings.retrieval_similarity_threshold
+    sim_threshold = settings.retrieval_similarity_threshold
     products = []
     seen_pids: set[str] = set()
 
@@ -112,7 +117,7 @@ def get_product_detail(product_id: str) -> str:
                 "detail_content": p.detail_content or "",
                 "price": p.price or "",
                 "specs": p.specs or "",
-                "stock_status": "充足" if p.stock > 0 else "缺货",
+                "stock_status": "充足" if (p.stock or 0) > 0 else "缺货",
                 "merchant_id": p.merchant_id,
             },
             ensure_ascii=False,
@@ -121,5 +126,47 @@ def get_product_detail(product_id: str) -> str:
         db.close()
 
 
+@tool("search_knowledge_base", args_schema=SearchKnowledgeInput)
+def search_knowledge_base(query: str, top_k: int = 4) -> str:
+    """检索平台知识库文档(售后政策、退换货规则、发票、物流、平台规则、常见FAQ 等非商品信息)。
+
+    当用户询问与具体商品无关的政策、规则、流程类问题时使用此工具。
+    只返回知识库文档片段,不会返回商品(商品请用 search_products_by_keyword)。
+    """
+    try:
+        vs = get_vector_store()
+    except Exception as e:
+        log.exception("Vector store init failed: %s", e)
+        return json.dumps({"error": "向量库初始化失败", "documents": []}, ensure_ascii=False)
+
+    try:
+        results = vs.similarity_search_with_score(query, k=max(top_k * 3, 12))
+    except Exception as e:
+        log.exception("Knowledge search failed: %s", e)
+        return json.dumps({"error": f"检索失败: {e}", "documents": []}, ensure_ascii=False)
+
+    sim_threshold = settings.retrieval_similarity_threshold
+    documents = []
+    for doc, distance in results:
+        meta = doc.metadata or {}
+        # Skip product vectors; they are handled by search_products_by_keyword
+        if meta.get("type") == "product":
+            continue
+        similarity = max(0.0, 1.0 - float(distance) / 2.0)
+        if similarity < sim_threshold:
+            continue
+        documents.append(
+            {
+                "source": meta.get("source", "未知"),
+                "snippet": (doc.page_content or "")[:500],
+                "similarity": round(similarity, 4),
+            }
+        )
+        if len(documents) >= top_k:
+            break
+
+    return json.dumps({"documents": documents}, ensure_ascii=False)
+
+
 # Registry exported for chain.py to bind to the LLM
-SHOPPING_TOOLS = [search_products_by_keyword, get_product_detail]
+SHOPPING_TOOLS = [search_products_by_keyword, get_product_detail, search_knowledge_base]

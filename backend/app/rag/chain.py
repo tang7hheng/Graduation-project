@@ -28,10 +28,31 @@ from sqlalchemy.orm import Session as DBSession
 from app.core.llm import get_llm
 from app.core.prompts import SYSTEM_PROMPT
 from app.rag.memory import load_context_messages, maybe_summarize
-from app.rag.tools import SHOPPING_TOOLS, search_products_by_keyword, get_product_detail
+from app.rag.tools import (
+    SHOPPING_TOOLS,
+    search_products_by_keyword,
+    get_product_detail,
+    search_knowledge_base,
+)
 from app.storage import session_store
 
 log = logging.getLogger(__name__)
+
+# Frontend "thinking" hints per tool name
+_TOOL_THINKING_HINT = {
+    "search_products_by_keyword": "正在查询商品信息...",
+    "get_product_detail": "正在查询商品详情...",
+    "search_knowledge_base": "正在查询知识库...",
+}
+
+# Strip whitespace + common CJK/ASCII punctuation before substring matching,
+# so formatting differences (e.g. "小米手环 10" vs "小米手环10") don't cause
+# a recommended product's card to be dropped.
+_MATCH_STRIP_RE = re.compile(r"[\s,\.。、!！?？;；:：~～\-—_/\\()（）\[\]【】\"'’‘]+")
+
+
+def _normalize_for_match(s: str) -> str:
+    return _MATCH_STRIP_RE.sub("", s or "")
 
 
 def _extract_exclusions(context_msgs: list[BaseMessage], current_msg: str) -> str:
@@ -85,6 +106,8 @@ def _execute_tool(tool_name: str, args: dict) -> str:
         return search_products_by_keyword.invoke(args)
     if tool_name == "get_product_detail":
         return get_product_detail.invoke(args)
+    if tool_name == "search_knowledge_base":
+        return search_knowledge_base.invoke(args)
     return json.dumps({"error": f"未知工具: {tool_name}"}, ensure_ascii=False)
 
 
@@ -97,6 +120,11 @@ def _name_in_answer(name: str, answer: str, window: int = 6) -> bool:
     mentioned a short version (e.g., DB: "小米手环10 NFC陶瓷版血氧心率睡眠监测...",
     answer: "小米手环10 NFC陶瓷版 — ¥309").
     """
+    if not name or not answer:
+        return False
+    # Normalize away spacing/punctuation differences before matching
+    name = _normalize_for_match(name)
+    answer = _normalize_for_match(answer)
     if not name or not answer:
         return False
     if len(name) <= window:
@@ -286,8 +314,8 @@ def stream_chat(
             for i, tc in enumerate(parsed_tool_calls):
                 tool_name = tc["name"]
                 tool_args = tc["args"]
-                # Tell the frontend we're querying products (reduces perceived lag)
-                thinking_msg = "正在查询商品信息..." if tool_name == "search_products_by_keyword" else "正在查询商品详情..."
+                # Tell the frontend what we're doing (reduces perceived lag)
+                thinking_msg = _TOOL_THINKING_HINT.get(tool_name, "正在查询...")
                 yield _sse({"type": "thinking", "message": thinking_msg})
                 yield _sse({"type": "tool_call", "name": tool_name, "args": tool_args})
                 try:

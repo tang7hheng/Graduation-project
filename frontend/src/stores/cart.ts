@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import type { ProductOut } from '@/api/client'
 import { checkoutCart } from '@/api/orders'
 import { useChatStore } from '@/stores/chat'
 
@@ -15,11 +14,22 @@ export interface CartLine {
   quantity: number
 }
 
+// add() 所需的结构化子集;ProductOut 和 ProductCard 都满足该结构
+export interface CartProductInput {
+  id: string
+  merchant_id: string
+  name: string
+  price: string
+  image_url: string
+  specs: string
+}
+
 const STORAGE_KEY = 'rag-cs-cart'
 
 function parsePrice(p: string): number {
-  const cleaned = (p || '').replace(/[^\d.]/g, '')
-  return cleaned ? parseFloat(cleaned) : 0
+  // 取第一个数字,避免 "199-299" 被解析成 199299
+  const m = (p || '').match(/\d+(?:\.\d+)?/)
+  return m ? parseFloat(m[0]) : 0
 }
 
 function load(): CartLine[] {
@@ -50,7 +60,7 @@ export const useCartStore = defineStore('cart', () => {
       .toFixed(2),
   )
 
-  function add(p: ProductOut, qty = 1) {
+  function add(p: CartProductInput, qty = 1) {
     const existing = lines.value.find((l) => l.product_id === p.id)
     if (existing) {
       existing.quantity += qty

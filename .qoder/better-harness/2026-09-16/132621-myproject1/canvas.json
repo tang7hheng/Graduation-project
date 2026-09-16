@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 2,
+  "summary": {
+    "evidenceMode": "session-limited",
+    "evidenceBoundary": {
+      "manifest": {
+        "schemaVersion": 2,
+        "sourceFingerprint": "2dc64829c1ca1f6c",
+        "adapterVersion": "qoder-task-loop-source-v2",
+        "platform": "qoder",
+        "selection": {
+          "strategy": "all-eligible",
+          "eligibleCount": 0,
+          "analyzedCount": 0,
+          "confidence": "Low"
+        }
+      },
+      "episodeCoverage": {
+        "episodeCount": 0,
+        "editedEpisodeCount": 0,
+        "closedEpisodeCount": 0,
+        "recoveredEpisodeCount": 0
+      },
+      "deliveryEvidenceLevels": [],
+      "sourceGaps": []
+    },
+    "semanticFacets": {
+      "schemaVersion": 1,
+      "status": "supplementary",
+      "entries": [
+        {
+          "id": "session-insight:source-coverage",
+          "kind": "redacted-summary",
+          "episodeRef": null,
+          "status": "candidate",
+          "labels": [
+            "source-coverage",
+            "Low"
+          ],
+          "summary": "Analyzed 0 of 0 sessions; 0/6 enabled source roots exist. Use this as the current workspace evidence boundary for final insight cards.",
+          "evidenceRefs": [],
+          "modelVersion": "session-insights-v1"
+        },
+        {
+          "id": "session-insight:validation-behavior",
+          "kind": "redacted-summary",
+          "episodeRef": null,
+          "status": "candidate",
+          "labels": [
+            "validation-behavior",
+            "Low"
+          ],
+          "summary": "No validation command category was observed in the analyzed session sample. Inspect more sessions or add explicit validation guidance before claiming validation-after-edit behavior.",
+          "evidenceRefs": [],
+          "modelVersion": "session-insights-v1"
+        },
+        {
+          "id": "session-insight:post-edit-validation",
+          "kind": "rework-correction",
+          "episodeRef": null,
+          "status": "candidate",
+          "labels": [
+            "post-edit-validation",
+            "Low"
+          ],
+          "summary": "No edit event was observed in the analyzed sample. Inspect more sessions before making claims about edit or validation habits.",
+          "evidenceRefs": [],
+          "modelVersion": "session-insights-v1"
+        },
+        {
+          "id": "session-insight:execution-friction",
+          "kind": "friction-taxonomy",
+          "episodeRef": null,
+          "status": "candidate",
+          "labels": [
+            "execution-friction",
+            "Low"
+          ],
+          "summary": "No strong execution friction signal in the analyzed sample. Keep friction claims narrow unless additional failed commands, rejected actions, or warnings are inspected.",
+          "evidenceRefs": [],
+          "modelVersion": "session-insights-v1"
+        }
+      ]
+    },
+    "learningCapture": {
+      "schemaVersion": 1,
+      "state": "N/A",
+      "summary": "暂不适用——需要两个可比的观察窗口和一次改进对比。",
+      "interventions": []
+    },
+    "aiAgentPractice": {
+      "inspectedSurfaces": [
+        "Rules",
+        "Skills",
+        "Hooks",
+        "Commands",
+        "Custom Agents",
+        "MCP",
+        "Workflows",
+        "Memories",
+        "Plugins"
+      ],
+      "coverageRows": [
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Hooks",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Commands",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "MCP",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Workflows",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Memories",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Plugins",
+          "scopes": [
+            "Plugin"
+          ],
+          "count": 0
+        }
+      ],
+      "repositorySourceRows": [],
+      "memoryDetails": {
+        "contentPolicy": "metadata-only",
+        "scanState": "scanned-empty",
+        "scopeCounts": [],
+        "integrity": {
+          "status": "reviewed",
+          "titleCount": 0,
+          "reviewedTitleCount": 0,
+          "truncated": false,
+          "exactCollisionGroups": 0,
+          "similarityCandidates": 0
+        }
+      }
+    },
+    "projectName": "智选商城",
+    "locale": "zh-CN",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 26,
+    "overview": "项目具备基本代码结构和启动脚本，但 Harness 基础设施处于初始状态：无 Agent 指令文件、无测试覆盖、无项目级定制资产。三个保留发现分别指向 Agent 上下文缺失、验证机制空白和文档漂移。建议支持轨道为 Bootstrap (0→1)。",
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "任务理解",
+        "score": 30,
+        "summary": "项目有 README 标识身份，但缺少 AGENTS.md 等 Agent 指令文件，AI 代理无法获取项目结构、约定和作用域边界等权威上下文。",
+        "findingRefs": [
+          "missing-agent-instructions",
+          "api-docs-drift"
+        ]
+      },
+      {
+        "id": "controlled-execution",
+        "label": "可控执行",
+        "score": 35,
+        "summary": "存在 package.json 脚本和启动脚本提供基本启动路径，但无 Agent 指令指导操作边界，项目级 Hooks/Commands/Skills 均为零。",
+        "findingRefs": [
+          "missing-agent-instructions"
+        ]
+      },
+      {
+        "id": "change-validation",
+        "label": "改动验证",
+        "score": 20,
+        "summary": "54 个源文件、0 个测试文件，近期 Schema 和 API 变更无任何验证覆盖，变更无法被自动化检验。",
+        "findingRefs": [
+          "zero-test-coverage"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "可靠交付",
+        "score": 25,
+        "summary": "无 CI/CD 配置、无验收边界、无回滚机制，交付依赖纯手工 git 工作流，外部验收边界不可观测。",
+        "findingRefs": []
+      },
+      {
+        "id": "learning-capture",
+        "label": "经验沉淀",
+        "score": 35,
+        "summary": "无项目 Memories、Skills 或学习路线，0 个可观测 Task Episode，无法支持循环工程或纵向验证。",
+        "findingRefs": []
+      }
+    ],
+    "assignmentSummaries": []
+  },
+  "findings": [
+    {
+      "id": "missing-agent-instructions",
+      "title": "项目缺少 Agent 指令文件，AI 代理缺乏权威上下文",
+      "severity": "Medium",
+      "reason": "项目拥有 54 个源文件（Python 39 + TypeScript 15），分布在 backend/app 和 frontend/src 两个主要根目录下，但未配置任何 AGENTS.md 文件。AI 代理在理解任务时缺少项目结构、架构约定、核心模块边界、启动/验证路径等权威指导，只能依赖代码推断，增加误解和返工风险。",
+      "dimensionRefs": [
+        "task-understanding",
+        "controlled-execution"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\n在仓库根目录创建 AGENTS.md，包含项目概述、目录结构说明、核心模块职责（backend/app 下的 api/rag/storage/schemas、frontend/src 下的 stores/api/components/views）、启动命令和验证路径。\n\n## Validation\n\n- 确认 AGENTS.md 存在且内容覆盖项目结构和核心模块\n- 使用新会话验证 Agent 能引用 AGENTS.md 中的信息",
+      "expectedArtifact": "Document",
+      "expectedOutput": [
+        "Update the existing Document owner identified by the reviewed evidence and retain a focused validation result."
+      ]
+    },
+    {
+      "id": "zero-test-coverage",
+      "title": "项目无任何测试文件，Schema 和 API 变更缺乏验证覆盖",
+      "severity": "Medium",
+      "reason": "项目有 54 个源文件但 0 个测试文件。近期变更涉及 Pydantic Schema（merchant.py、order.py）和 API 端点（orders.py、products.py），但无任何自动化测试验证其行为。变更后的正确性完全依赖人工检查，回归风险不可控。",
+      "dimensionRefs": [
+        "change-validation"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\n为 backend/app/schemas 下的 Pydantic 模型添加基础验证测试，覆盖 merchant.py 和 order.py 的核心字段约束和序列化行为。使用 pytest 作为测试框架。\n\n## Validation\n\n- 运行 pytest 确认测试通过\n- 确认测试覆盖了 schema 的核心字段约束",
+      "expectedArtifact": "Test",
+      "expectedOutput": [
+        "Update the existing Test owner identified by the reviewed evidence and retain a focused validation result."
+      ]
+    },
+    {
+      "id": "api-docs-drift",
+      "title": "公开 API 端点已变更但文档未同步更新",
+      "severity": "Low",
+      "reason": "orders.py 和 products.py 中的公开 API 端点在近期提交中被修改，但 API.md 和 README.md 等文档文件未同步变更。API 消费者或 AI 代理可能依据过时的文档做出错误决策。",
+      "dimensionRefs": [
+        "task-understanding"
+      ],
+      "aiFixPrompt": "/better-harness fix this issue\n\n检查 backend/app/api/v1/orders.py 和 products.py 的当前端点定义，与 API.md 中的描述进行对比，更新文档以反映实际 API 表面。\n\n## Validation\n\n- 确认 API.md 中的端点路径、参数和响应格式与源代码一致",
+      "expectedArtifact": "Document",
+      "expectedOutput": [
+        "Update the existing Document owner identified by the reviewed evidence and retain a focused validation result."
+      ]
+    }
+  ]
+}

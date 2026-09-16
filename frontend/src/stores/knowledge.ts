@@ -52,7 +52,7 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
   async function rebuild() {
     try {
       const { data } = await http.post('/kb/rebuild', {}, { timeout: 300000 })
-      ElMessage.success(`重建完成,共重新索引 ${data.reindexed} 个文档`)
+      ElMessage.success(`重建完成:文档 ${data.reindexed} 个,商品 ${data.products_reindexed ?? 0} 个`)
       await fetchList()
     } catch (e: any) {
       ElMessage.error(e.message || '重建失败')

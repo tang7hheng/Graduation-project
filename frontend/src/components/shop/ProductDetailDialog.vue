@@ -41,7 +41,9 @@ function buyNow() {
         <div class="price-row">
           <span class="price" v-if="product.price">¥{{ product.price }}</span>
           <span v-else class="price-na">价格面议</span>
-          <el-tag size="small" type="success" effect="light">库存充足</el-tag>
+          <el-tag size="small" :type="product.stock > 0 ? 'success' : 'danger'" effect="light">
+            {{ product.stock > 0 ? '库存充足' : '缺货' }}
+          </el-tag>
         </div>
         <el-descriptions :column="1" border size="small" class="desc">
           <el-descriptions-item label="规格">{{ product.specs || '—' }}</el-descriptions-item>

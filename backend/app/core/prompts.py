@@ -10,7 +10,7 @@ Key constraints (per user requirements):
 SYSTEM_PROMPT = """你是一家电商平台的智能导购客服。请严格遵循以下规则:
 
 【权限边界 - 最高优先级,不可违反】
-1. 你不能直接访问数据库,只能调用系统提供的工具(search_products_by_keyword / get_product_detail)查询商品。
+1. 你不能直接访问数据库,只能调用系统提供的工具:search_products_by_keyword / get_product_detail 查询商品,search_knowledge_base 查询平台知识库文档(政策、规则、FAQ 等)。
 2. 你只能查询商品信息,绝对不能下单、修改、删除商品或订单。用户下单须由用户在前端点击商品卡片完成,你不能代为操作。
 3. 如果用户要求"帮我下单/购买/加入购物车",必须明确告知:你可以推荐商品,但下单需要用户自行点击商品卡片完成。
 4. 不得讨论与电商客服业务无关的话题(如政治、宗教);遇到此类问题礼貌拒绝。
@@ -48,6 +48,9 @@ SYSTEM_PROMPT = """你是一家电商平台的智能导购客服。请严格遵�
       你应基于此内容回答用户关于商品功能、用法、退换货、保修等问题。
    d) 如果用户询问退换货、保修、售后等政策,先用 get_product_detail 查询对应商品的 detail_content,
       基于其中的售后政策内容回答,不要编造通用的退换货政策。
+   e) 如果用户询问的是与具体商品无关的平台规则、购物流程、发票、物流、账户、通用 FAQ 等问题,
+      调用 search_knowledge_base 工具检索平台知识库文档,基于检索到的内容回答;
+      若知识库中没有相关内容,如实告知“暂未找到相关政策说明”,不要编造。
 6. 若检索结果为空或无相关商品,绝对不要编造答案;应礼貌地反问,请用户提供更多细节(如商品类别、预算、用途)以便进一步协助。
 
 【回答格式】
@@ -63,32 +66,6 @@ SYSTEM_PROMPT = """你是一家电商平台的智能导购客服。请严格遵�
 - 用户:"帮我下单第一个"
   客服:"抱歉,我无法直接为您下单。您可以点击下方商品卡片中的'立即购买'按钮自行完成下单。"
 """
-
-
-def format_context(docs: list) -> str:
-    """Format retrieved docs into numbered context block.
-
-    Note: with tool-based retrieval, docs may be empty (LLM retrieved via tools).
-    In that case we return an empty-context hint so the system prompt's tool rules apply.
-    """
-    if not docs:
-        return ""  # No pre-retrieved context; LLM should use tools instead
-
-    blocks = []
-    for i, doc in enumerate(docs, start=1):
-        snippet = (doc.page_content or "").strip()
-        meta = doc.metadata or {}
-        mtype = meta.get("type")
-        if mtype == "product":
-            label = f"商品:{meta.get('name', '未知')}"
-            if meta.get("price"):
-                label += f"(价格:{meta['price']})"
-        else:
-            source = meta.get("source", "未知")
-            page = meta.get("page")
-            label = source + (f"(第{page}页)" if page is not None else "")
-        blocks.append(f"[{i}] {label}\n{snippet}")
-    return "参考知识(可能包含商品信息):\n" + "\n\n".join(blocks)
 
 
 def summarize_prompt(history_text: str) -> str:

@@ -56,8 +56,10 @@ function shortId(id: string) { return id.slice(0, 8) }
         </el-table-column>
         <el-table-column label="操作" width="160">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'pending'" type="primary" size="small" @click="orders.pay(row.id)">立即支付</el-button>
-            <el-button v-if="row.status === 'pending'" type="info" size="small" link @click="orders.cancel(row.id)">取消</el-button>
+            <template v-if="row.status === 'pending'">
+              <el-button type="primary" size="small" @click="orders.pay(row.id)">立即支付</el-button>
+              <el-button type="info" size="small" link @click="orders.cancel(row.id)">取消</el-button>
+            </template>
             <span v-else class="muted">—</span>
           </template>
         </el-table-column>

@@ -33,6 +33,7 @@ function navItems() {
   if (role.isMerchant) {
     return [
       { index: '/merchant', label: '商品管理' },
+      { index: '/knowledge', label: '知识库' },
     ]
   }
   return [

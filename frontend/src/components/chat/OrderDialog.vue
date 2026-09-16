@@ -27,8 +27,9 @@ const dialogVisible = computed({
 watch(() => props.product?.id, () => { quantity.value = 1; remark.value = '' })
 
 function parsePrice(p: string): number {
-  const cleaned = (p || '').replace(/[^\d.]/g, '')
-  return cleaned ? parseFloat(cleaned) : 0
+  // 取第一个数字,避免 "199-299" 被解析成 199299
+  const m = (p || '').match(/\d+(?:\.\d+)?/)
+  return m ? parseFloat(m[0]) : 0
 }
 
 const total = computed(() => {

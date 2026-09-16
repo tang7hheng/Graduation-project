@@ -10,8 +10,9 @@ const router = useRouter()
 const remark = ref('')
 
 function parsePrice(p: string): number {
-  const cleaned = (p || '').replace(/[^\d.]/g, '')
-  return cleaned ? parseFloat(cleaned) : 0
+  // 取第一个数字,避免 "199-299" 被解析成 199299
+  const m = (p || '').match(/\d+(?:\.\d+)?/)
+  return m ? parseFloat(m[0]) : 0
 }
 function lineTotal(price: string, qty: number): string {
   return (parsePrice(price) * qty).toFixed(2)

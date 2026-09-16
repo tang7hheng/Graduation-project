@@ -4,6 +4,7 @@ A consumer places an order by clicking a product card in the chat. The order
 is bound to the chat session (if any) and snapshots product info at order time.
 """
 import logging
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
@@ -18,16 +19,17 @@ router = APIRouter()
 
 
 def _parse_price(p: Product) -> float:
-    """Best-effort parse product.price (string like "499.00 元" or "499") to float."""
+    """Best-effort parse product.price (string like "499.00 元" or "499") to float.
+
+    Extracts the first numeric value so range prices like "199-299" or
+    "199.00-299.00" don't get mangled into a single wrong number (e.g. 199299.0)
+    or raise ValueError on multiple dots.
+    """
     raw = (p.price or "").strip()
     if not raw:
         return 0.0
-    # Strip common units and keep digits/dot
-    cleaned = "".join(ch for ch in raw if ch.isdigit() or ch == ".")
-    try:
-        return float(cleaned) if cleaned else 0.0
-    except ValueError:
-        return 0.0
+    m = re.search(r"\d+(?:\.\d+)?", raw)
+    return float(m.group()) if m else 0.0
 
 
 @router.post("/orders", response_model=OrderOut)

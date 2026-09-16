@@ -108,14 +108,18 @@ def delete_document(doc_id: str, db: DBSession = Depends(get_db)):
 
 @router.post("/kb/rebuild", response_model=RebuildResp)
 def rebuild_index(db: DBSession = Depends(get_db)):
-    """Drop and re-index all documents in the DB."""
+    """Drop and re-index ALL vectors: knowledge documents AND products.
+
+    reset_collection() wipes the entire Chroma collection, which also contains
+    the product vectors. If we only re-indexed documents, product search would
+    break permanently. So after the reset we rebuild both documents and products.
+    """
     from sqlalchemy import select
+    from app.rag.product_indexer import index_all_products
 
     docs = db.execute(select(Document).where(Document.status == "indexed")).scalars().all()
-    if not docs:
-        return RebuildResp(reindexed=0)
 
-    # Reset collection
+    # Reset collection (wipes documents AND product vectors)
     vector_store.reset_collection()
 
     reindexed = 0
@@ -133,5 +137,9 @@ def rebuild_index(db: DBSession = Depends(get_db)):
         except Exception as e:
             log.warning("Rebuild failed for %s: %s", doc.filename, e)
             doc.status = "failed"
+
+    # Re-index all products so导购检索在 reset 之后依然可用
+    products_reindexed = index_all_products(db)
+
     db.commit()
-    return RebuildResp(reindexed=reindexed)
+    return RebuildResp(reindexed=reindexed, products_reindexed=products_reindexed)

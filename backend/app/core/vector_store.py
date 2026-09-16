@@ -28,13 +28,6 @@ def add_documents(docs: list[Document]) -> int:
     return len(docs)
 
 
-def similarity_search_with_score(query: str, k: int = None) -> list[tuple[Document, float]]:
-    k = k or settings.retrieval_top_k
-    vs = get_vector_store()
-    # Chroma returns (Document, distance); lower distance = more similar (cosine distance)
-    return vs.similarity_search_with_score(query, k=k)
-
-
 def delete_by_doc_id(doc_id: str) -> int:
     """Delete all chunks belonging to a document by metadata filter."""
     return _delete_by_metadata({"doc_id": doc_id})

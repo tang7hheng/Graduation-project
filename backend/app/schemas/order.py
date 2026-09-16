@@ -39,7 +39,7 @@ class CartCheckout(BaseModel):
 class OrderOut(BaseModel):
     id: str
     session_id: Optional[str] = None
-    merchant_id: str
+    merchant_id: Optional[str] = None  # 商户被删除(SET NULL)后可能为 None
     status: str
     total_amount: str
     remark: str

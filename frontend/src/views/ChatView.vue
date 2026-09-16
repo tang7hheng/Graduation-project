@@ -31,14 +31,19 @@ watch(currentId, async (id) => {
 
 onMounted(async () => {
   await sessions.fetchList()
-  if (sessions.list.length > 0 && !currentId.value) {
-    await sessions.select(sessions.list[0].id)
-  } else if (sessions.list.length === 0) {
-    // No sessions — create one so pending query can be sent
-    await sessions.create()
+  if (!currentId.value) {
+    // 还没选中会话:选中最新一个,或没有会话则创建一个。
+    // 设置 currentId 会触发上面的 watch,由它加载会话后再发送 pendingQuery。
+    // 这里直接 return,避免与 watch 重复发送 / 被 loadSession 的 reset() 中止。
+    if (sessions.list.length > 0) {
+      await sessions.select(sessions.list[0].id)
+    } else {
+      await sessions.create()
+    }
+    return
   }
-  // If there's a pending query, auto-send it
-  if (chat.pendingQuery && currentId.value && !isStreaming.value) {
+  // 已经选中会话(从其他页面返回),watch 不会触发,这里直接处理 pendingQuery。
+  if (chat.pendingQuery && !isStreaming.value) {
     const q = chat.pendingQuery
     chat.pendingQuery = ''
     await nextTick()
